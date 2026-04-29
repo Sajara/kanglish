@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanglish Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px 24px;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .input-wrap { position: relative; margin-bottom: 16px; }
+
+    textarea {
+      width: 100%;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px 40px 12px 16px;
+      font-size: 16px;
+      color: #1f2937;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.5;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #818cf8;
+      box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
+    }
+    textarea::placeholder { color: #9ca3af; }
+
+    .clear-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #d1d5db;
+      cursor: pointer;
+      padding: 2px;
+      display: none;
+      transition: color 0.15s;
+    }
+    .clear-btn:hover { color: #6b7280; }
+    .clear-btn svg { width: 20px; height: 20px; }
+
+    .translate-btn {
+      width: 100%;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+    .translate-btn:hover { background: #4338ca; }
+    .translate-btn:active { background: #3730a3; }
+
+    .output-box { margin-top: 20px; display: none; }
+    .output-box.visible { display: block; }
+
+    .output-card {
+      background: #eef2ff;
+      border: 1.5px solid #e0e7ff;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .output-text {
+      color: #312e81;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 1.6;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      background: #fff;
+      border: 1.5px solid #c7d2fe;
+      color: #4f46e5;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .copy-btn:hover { background: #e0e7ff; }
+    .copy-btn:active { transform: scale(0.95); }
+
+    .detected {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .toast {
+      display: none;
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .toast.show {
+      display: block;
+      animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 1.2s forwards;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #d1d5db;
+      margin-top: 24px;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+
+    @media (min-width: 480px) {
+      .widget { padding: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widget">
+    <div class="header">
+      <h1>Kanglish</h1>
+      <p>English or Tamil → Bengaluru Kanglish</p>
+    </div>
+
+    <div class="input-wrap">
+      <textarea id="inputText" rows="3"
+        placeholder="Type in English or Tamil (transliterated)…"
+        aria-label="Input text in English or Tamil"></textarea>
+      <button id="clearBtn" class="clear-btn" aria-label="Clear input">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <button id="translateBtn" class="translate-btn">Translate to Kanglish</button>
+
+    <div id="outputBox" class="output-box">
+      <div class="output-card">
+        <p id="outputText" class="output-text"></p>
+        <button id="copyBtn" class="copy-btn" aria-label="Copy result">Copy</button>
+      </div>
+      <p id="detectedLang" class="detected"></p>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <p class="footer">Works offline · No data sent anywhere</p>
+  </div>
+
+  <script src="kanglish.js"></script>
+</body>
+</html>
