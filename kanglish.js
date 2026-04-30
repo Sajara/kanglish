@@ -1,93 +1,112 @@
-// ─── Kanglish Translation Engine v2 ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// Kanglish v5 — "The Dravidian Bridge" Engine
+// Uses Tamil sentence structure as interlingua for natural Kanglish output.
+// English → Semantic Roles → SOV Assembly → Kanglish
+// ═══════════════════════════════════════════════════════════════════════════
 
+// ─── VERB DICTIONARY ───────────────────────────────────────────────────────
+// Each verb has: madi (polite command), gerund (while doing), past, present,
+// chain (adverbial participle for verb+verb joining: "come and eat" → "bandhu tinni")
 const VERBS = {
-  "come":     { madi: "banni",     gerund: "barthaa",   past: "bande",     present: "barthini" },
-  "go":       { madi: "hogi",      gerund: "hogthaa",   past: "hoyde",     present: "hogthini" },
-  "bring":    { madi: "thogondu banni", gerund: "thogondu", past: "thogonde", present: "thogothini" },
-  "take":     { madi: "thogondu hogi",  gerund: "thogondu", past: "thogonde", present: "thogothini" },
-  "give":     { madi: "kodi",      gerund: "kodthaa",   past: "kotte",     present: "kodthini" },
-  "eat":      { madi: "tinni",     gerund: "tinthaa",   past: "tinde",     present: "tinthini" },
-  "drink":    { madi: "kudi",      gerund: "kudithaa",  past: "kudide",    present: "kudithini" },
-  "wait":     { madi: "thadi",     gerund: "thadthaa",  past: "thadide",   present: "thadthini" },
-  "call":     { madi: "call-madi", gerund: "call-maadthaa", past: "call-maadde", present: "call-maadthini" },
-  "pay":      { madi: "pay-madi",  gerund: "pay-maadthaa",  past: "pay-maadde",  present: "pay-maadthini" },
-  "start":    { madi: "shuru-madi",gerund: "shuru-maadthaa",past: "shuru-maadde",present: "shuru-maadthini" },
-  "stop":     { madi: "nilsu",     gerund: "nilsthaa",  past: "nilside",   present: "nilsthini" },
-  "tell":     { madi: "heli",      gerund: "helthaa",   past: "helde",     present: "helthini" },
-  "say":      { madi: "heli",      gerund: "helthaa",   past: "helde",     present: "helthini" },
-  "show":     { madi: "thorsu",    gerund: "thorsthaa", past: "thorside",  present: "thorsthini" },
-  "see":      { madi: "nodi",      gerund: "nodthaa",   past: "node",      present: "nodthini" },
-  "look":     { madi: "nodi",      gerund: "nodthaa",   past: "node",      present: "nodthini" },
-  "watch":    { madi: "nodi",      gerund: "nodthaa",   past: "node",      present: "nodthini" },
-  "sit":      { madi: "kutkoli",   gerund: "kutkothaa", past: "kutkonde",  present: "kutkothini" },
-  "stand":    { madi: "nilli",     gerund: "nilthaa",   past: "ninte",     present: "nilthini" },
-  "walk":     { madi: "nadee",     gerund: "nadeethaa", past: "nadede",    present: "nadeethini" },
-  "run":      { madi: "odu",       gerund: "odthaa",    past: "odide",     present: "odthini" },
-  "send":     { madi: "kalsu",     gerund: "kalsthaa",  past: "kalside",   present: "kalsthini" },
-  "keep":     { madi: "itkoli",    gerund: "itkothaa",  past: "itkonde",   present: "itkothini" },
-  "put":      { madi: "haku",      gerund: "hakthaa",   past: "hakide",    present: "hakthini" },
-  "open":     { madi: "open-madi", gerund: "open-maadthaa", past: "open-maadde", present: "open-maadthini" },
-  "close":    { madi: "close-madi",gerund: "close-maadthaa",past: "close-maadde",present: "close-maadthini" },
-  "clean":    { madi: "clean-madi",gerund: "clean-maadthaa",past: "clean-maadde",present: "clean-maadthini" },
-  "wash":     { madi: "tholee",    gerund: "tholeethaa",past: "tholeede",  present: "tholeethini" },
-  "cook":     { madi: "aduge-madi",gerund: "aduge-maadthaa",past: "aduge-maadde",present: "aduge-maadthini" },
-  "help":     { madi: "help-madi", gerund: "help-maadthaa", past: "help-maadde", present: "help-maadthini" },
-  "work":     { madi: "kelsa-madi",gerund: "kelsa-maadthaa",past: "kelsa-maadde",present: "kelsa-maadthini" },
-  "finish":   { madi: "mugsu",     gerund: "mugsthaa",  past: "mugside",   present: "mugsthini" },
-  "buy":      { madi: "thogoli",   gerund: "thogothaa", past: "thogonde",  present: "thogothini" },
-  "sell":     { madi: "maaru",     gerund: "maaruthaa", past: "maarude",   present: "maaruthini" },
-  "read":     { madi: "odu",       gerund: "odthaa",    past: "odide",     present: "odthini" },
-  "write":    { madi: "baree",     gerund: "bareethaa", past: "bareede",   present: "bareethini" },
-  "drive":    { madi: "drive-madi",gerund: "drive-maadthaa",past: "drive-maadde",present: "drive-maadthini" },
-  "park":     { madi: "park-madi", gerund: "park-maadthaa", past: "park-maadde", present: "park-maadthini" },
-  "book":     { madi: "book-madi", gerund: "book-maadthaa", past: "book-maadde", present: "book-maadthini" },
-  "cancel":   { madi: "cancel-madi",gerund:"cancel-maadthaa",past:"cancel-maadde",present:"cancel-maadthini" },
-  "check":    { madi: "check-madi",gerund: "check-maadthaa",past: "check-maadde",present: "check-maadthini" },
-  "fix":      { madi: "fix-madi",  gerund: "fix-maadthaa",  past: "fix-maadde",  present: "fix-maadthini" },
-  "order":    { madi: "order-madi",gerund: "order-maadthaa",past: "order-maadde",present: "order-maadthini" },
-  "deliver":  { madi: "deliver-madi",gerund:"deliver-maadthaa",past:"deliver-maadde",present:"deliver-maadthini" },
-  "install":  { madi: "install-madi",gerund:"install-maadthaa",past:"install-maadde",present:"install-maadthini" },
-  "update":   { madi: "update-madi",gerund:"update-maadthaa",past:"update-maadde",present:"update-maadthini" },
-  "download": { madi: "download-madi",gerund:"download-maadthaa",past:"download-maadde",present:"download-maadthini" },
-  "share":    { madi: "share-madi",gerund: "share-maadthaa",past: "share-maadde",present: "share-maadthini" },
-  "print":    { madi: "print-madi",gerund: "print-maadthaa",past: "print-maadde",present: "print-maadthini" },
-  "move":     { madi: "move-madi", gerund: "move-maadthaa", past: "move-maadde", present: "move-maadthini" },
-  "turn":     { madi: "thirgu",    gerund: "thirgthaa", past: "thirgide",  present: "thirgthini" },
-  "use":      { madi: "use-madi",  gerund: "use-maadthaa",  past: "use-maadde",  present: "use-maadthini" },
-  "ask":      { madi: "kelu",      gerund: "kelthaa",   past: "kelde",     present: "kelthini" },
-  "sleep":    { madi: "malkoli",   gerund: "malkothaa", past: "malkonde",  present: "malkothini" },
-  "wake":     { madi: "yeddu",     gerund: "yeddthaa",  past: "yeddide",   present: "yeddthini" },
-  "make":     { madi: "maadi",     gerund: "maadthaa",  past: "maadde",    present: "maadthini" },
-  "do":       { madi: "maadi",     gerund: "maadthaa",  past: "maadde",    present: "maadthini" },
-  "talk":     { madi: "maathaadu", gerund: "maathaadthaa",past:"maathaadde",present:"maathaadthini" },
-  "speak":    { madi: "maathaadu", gerund: "maathaadthaa",past:"maathaadde",present:"maathaadthini" },
-  "listen":   { madi: "keli",      gerund: "kelthaa",   past: "kelde",     present: "kelthini" },
-  "learn":    { madi: "kalthkoli", gerund: "kalthkothaa",past:"kalthkonde",present:"kalthkothini" },
-  "play":     { madi: "aadu",      gerund: "aadthaa",   past: "aadide",    present: "aadthini" },
-  "sing":     { madi: "haadu",     gerund: "haadthaa",  past: "haadide",   present: "haadthini" },
-  "know":     { madi: "gottu",     gerund: "gottu",     past: "gottittu",  present: "gottu" },
-  "think":    { madi: "yochne-madi",gerund:"yochne-maadthaa",past:"yochne-maadde",present:"yochne-maadthini" },
-  "forget":   { madi: "marathbedi",gerund: "marethaa",  past: "marethde",  present: "marethini" },
-  "remember": { madi: "nenpu-itkoli",gerund:"nenpu-itkothaa",past:"nenpu-itkonde",present:"nenpu-itkothini" },
-  "try":      { madi: "try-madi",  gerund: "try-maadthaa",  past: "try-maadde",  present: "try-maadthini" },
-  "leave":    { madi: "bidu",      gerund: "bidthaa",   past: "bidde",     present: "bidthini" },
-  "stay":     { madi: "iru",       gerund: "irthaa",    past: "idde",      present: "irthini" },
-  "reach":    { madi: "reach-aagu",gerund: "reach-aagthaa", past: "reach-aaytu", present: "reach-aagthini" },
-  "return":   { madi: "vapas-banni",gerund:"vapas-barthaa",past:"vapas-bande",present:"vapas-barthini" },
-  "change":   { madi: "change-madi",gerund:"change-maadthaa",past:"change-maadde",present:"change-maadthini" },
-  "pick":     { madi: "thogoli",   gerund: "thogothaa", past: "thogonde",  present: "thogothini" },
-  "drop":     { madi: "bidu",      gerund: "bidthaa",   past: "bidde",     present: "bidthini" },
-  "meet":     { madi: "meet-madi", gerund: "meet-maadthaa", past: "meet-maadde", present: "meet-maadthini" },
-  "complete": { madi: "mugsu",     gerund: "mugsthaa",  past: "mugside",   present: "mugsthini" },
-  "prepare":  { madi: "ready-madi",gerund: "ready-maadthaa",past: "ready-maadde",present: "ready-maadthini" },
-  "hold":     { madi: "hidkoli",   gerund: "hidkothaa", past: "hidkonde",  present: "hidkothini" },
-  "push":     { madi: "thallu",    gerund: "thallthaa", past: "thallide",  present: "thallthini" },
-  "pull":     { madi: "eelu",      gerund: "eelthaa",   past: "eelde",     present: "eelthini" },
-  "need":     { madi: "beku",      gerund: "beku",      past: "bekittu",   present: "beku" },
-  "want":     { madi: "beku",      gerund: "beku",      past: "bekittu",   present: "beku" },
+  "come":     { madi:"banni",    gerund:"barthaa",  past:"bande",    present:"barthini",  chain:"bandhu" },
+  "go":       { madi:"hogi",     gerund:"hogthaa",  past:"hoyde",    present:"hogthini",  chain:"hogidhu" },
+  "bring":    { madi:"thogondu banni", gerund:"thogondu", past:"thogonde", present:"thogothini", chain:"thogondu" },
+  "take":     { madi:"thogondu hogi",  gerund:"thogondu", past:"thogonde", present:"thogothini", chain:"thogondu" },
+  "give":     { madi:"kodi",     gerund:"kodthaa",  past:"kotte",    present:"kodthini",  chain:"kottu" },
+  "eat":      { madi:"tinni",    gerund:"tinthaa",  past:"tinde",    present:"tinthini",  chain:"tindhu" },
+  "drink":    { madi:"kudi",     gerund:"kudithaa", past:"kudide",   present:"kudithini", chain:"kudidhu" },
+  "wait":     { madi:"thadi",    gerund:"thadthaa", past:"thadide",  present:"thadthini", chain:"thadidhu" },
+  "call":     { madi:"call-madi",gerund:"call-maadthaa",past:"call-maadde",present:"call-maadthini",chain:"call-maadidhu" },
+  "pay":      { madi:"pay-madi", gerund:"pay-maadthaa", past:"pay-maadde", present:"pay-maadthini", chain:"pay-maadidhu" },
+  "start":    { madi:"shuru-madi",gerund:"shuru-maadthaa",past:"shuru-maadde",present:"shuru-maadthini",chain:"shuru-maadidhu" },
+  "stop":     { madi:"nilsu",    gerund:"nilsthaa", past:"nilside",  present:"nilsthini", chain:"nilsidhu" },
+  "tell":     { madi:"heli",     gerund:"helthaa",  past:"helde",    present:"helthini",  chain:"heldhu" },
+  "say":      { madi:"heli",     gerund:"helthaa",  past:"helde",    present:"helthini",  chain:"heldhu" },
+  "show":     { madi:"thorsu",   gerund:"thorsthaa",past:"thorside", present:"thorsthini",chain:"thorsidhu" },
+  "see":      { madi:"nodi",     gerund:"nodthaa",  past:"node",     present:"nodthini",  chain:"nodidhu" },
+  "look":     { madi:"nodi",     gerund:"nodthaa",  past:"node",     present:"nodthini",  chain:"nodidhu" },
+  "watch":    { madi:"nodi",     gerund:"nodthaa",  past:"node",     present:"nodthini",  chain:"nodidhu" },
+  "sit":      { madi:"kutkoli",  gerund:"kutkothaa",past:"kutkonde", present:"kutkothini",chain:"kutkondhu" },
+  "stand":    { madi:"nilli",    gerund:"nilthaa",  past:"ninte",    present:"nilthini",  chain:"ninthu" },
+  "walk":     { madi:"nadee",    gerund:"nadeethaa",past:"nadede",   present:"nadeethini",chain:"nadedhu" },
+  "run":      { madi:"odu",      gerund:"odthaa",   past:"odide",    present:"odthini",   chain:"odidhu" },
+  "send":     { madi:"kalsu",    gerund:"kalsthaa", past:"kalside",  present:"kalsthini", chain:"kalsidhu" },
+  "keep":     { madi:"itkoli",   gerund:"itkothaa", past:"itkonde",  present:"itkothini", chain:"itkondhu" },
+  "put":      { madi:"haku",     gerund:"hakthaa",  past:"hakide",   present:"hakthini",  chain:"hakidhu" },
+  "open":     { madi:"open-madi",gerund:"open-maadthaa",past:"open-maadde",present:"open-maadthini",chain:"open-maadidhu" },
+  "close":    { madi:"close-madi",gerund:"close-maadthaa",past:"close-maadde",present:"close-maadthini",chain:"close-maadidhu" },
+  "clean":    { madi:"clean-madi",gerund:"clean-maadthaa",past:"clean-maadde",present:"clean-maadthini",chain:"clean-maadidhu" },
+  "wash":     { madi:"tholee",   gerund:"tholeethaa",past:"tholeede",present:"tholeethini",chain:"tholeedhu" },
+  "cook":     { madi:"aduge-madi",gerund:"aduge-maadthaa",past:"aduge-maadde",present:"aduge-maadthini",chain:"aduge-maadidhu" },
+  "help":     { madi:"help-madi",gerund:"help-maadthaa",past:"help-maadde",present:"help-maadthini",chain:"help-maadidhu" },
+  "work":     { madi:"kelsa-madi",gerund:"kelsa-maadthaa",past:"kelsa-maadde",present:"kelsa-maadthini",chain:"kelsa-maadidhu" },
+  "finish":   { madi:"mugsu",    gerund:"mugsthaa", past:"mugside",  present:"mugsthini", chain:"mugsidhu" },
+  "buy":      { madi:"thogoli",  gerund:"thogothaa",past:"thogonde", present:"thogothini",chain:"thogondhu" },
+  "sell":     { madi:"maaru",    gerund:"maaruthaa",past:"maarude",  present:"maaruthini",chain:"maarudhu" },
+  "read":     { madi:"odu",      gerund:"odthaa",   past:"odide",    present:"odthini",   chain:"odidhu" },
+  "write":    { madi:"baree",    gerund:"bareethaa",past:"bareede",  present:"bareethini",chain:"bareedhu" },
+  "drive":    { madi:"drive-madi",gerund:"drive-maadthaa",past:"drive-maadde",present:"drive-maadthini",chain:"drive-maadidhu" },
+  "park":     { madi:"park-madi",gerund:"park-maadthaa",past:"park-maadde",present:"park-maadthini",chain:"park-maadidhu" },
+  "book":     { madi:"book-madi",gerund:"book-maadthaa",past:"book-maadde",present:"book-maadthini",chain:"book-maadidhu" },
+  "cancel":   { madi:"cancel-madi",gerund:"cancel-maadthaa",past:"cancel-maadde",present:"cancel-maadthini",chain:"cancel-maadidhu" },
+  "check":    { madi:"check-madi",gerund:"check-maadthaa",past:"check-maadde",present:"check-maadthini",chain:"check-maadidhu" },
+  "fix":      { madi:"fix-madi", gerund:"fix-maadthaa",past:"fix-maadde",present:"fix-maadthini",chain:"fix-maadidhu" },
+  "order":    { madi:"order-madi",gerund:"order-maadthaa",past:"order-maadde",present:"order-maadthini",chain:"order-maadidhu" },
+  "deliver":  { madi:"deliver-madi",gerund:"deliver-maadthaa",past:"deliver-maadde",present:"deliver-maadthini",chain:"deliver-maadidhu" },
+  "install":  { madi:"install-madi",gerund:"install-maadthaa",past:"install-maadde",present:"install-maadthini",chain:"install-maadidhu" },
+  "update":   { madi:"update-madi",gerund:"update-maadthaa",past:"update-maadde",present:"update-maadthini",chain:"update-maadidhu" },
+  "download": { madi:"download-madi",gerund:"download-maadthaa",past:"download-maadde",present:"download-maadthini",chain:"download-maadidhu" },
+  "share":    { madi:"share-madi",gerund:"share-maadthaa",past:"share-maadde",present:"share-maadthini",chain:"share-maadidhu" },
+  "print":    { madi:"print-madi",gerund:"print-maadthaa",past:"print-maadde",present:"print-maadthini",chain:"print-maadidhu" },
+  "move":     { madi:"move-madi",gerund:"move-maadthaa",past:"move-maadde",present:"move-maadthini",chain:"move-maadidhu" },
+  "turn":     { madi:"thirgu",   gerund:"thirgthaa",past:"thirgide", present:"thirgthini",chain:"thirgidhu" },
+  "use":      { madi:"use-madi", gerund:"use-maadthaa",past:"use-maadde",present:"use-maadthini",chain:"use-maadidhu" },
+  "ask":      { madi:"kelu",     gerund:"kelthaa",  past:"kelde",    present:"kelthini",  chain:"keldhu" },
+  "sleep":    { madi:"malkoli",  gerund:"malkothaa",past:"malkonde", present:"malkothini",chain:"malkondhu" },
+  "wake":     { madi:"yeddu",    gerund:"yeddthaa", past:"yeddide",  present:"yeddthini", chain:"yeddidhu" },
+  "make":     { madi:"maadi",    gerund:"maadthaa", past:"maadde",   present:"maadthini", chain:"maadidhu" },
+  "do":       { madi:"maadi",    gerund:"maadthaa", past:"maadde",   present:"maadthini", chain:"maadidhu" },
+  "talk":     { madi:"maathaadu",gerund:"maathaadthaa",past:"maathaadde",present:"maathaadthini",chain:"maathaadidhu" },
+  "speak":    { madi:"maathaadu",gerund:"maathaadthaa",past:"maathaadde",present:"maathaadthini",chain:"maathaadidhu" },
+  "listen":   { madi:"keli",     gerund:"kelthaa",  past:"kelde",    present:"kelthini",  chain:"keldhu" },
+  "learn":    { madi:"kalthkoli",gerund:"kalthkothaa",past:"kalthkonde",present:"kalthkothini",chain:"kalthkondhu" },
+  "play":     { madi:"aadu",     gerund:"aadthaa",  past:"aadide",   present:"aadthini",  chain:"aadidhu" },
+  "sing":     { madi:"haadu",    gerund:"haadthaa", past:"haadide",  present:"haadthini", chain:"haadidhu" },
+  "know":     { madi:"gottu",    gerund:"gottu",    past:"gottittu", present:"gottu",     chain:"gottu" },
+  "think":    { madi:"yochne-madi",gerund:"yochne-maadthaa",past:"yochne-maadde",present:"yochne-maadthini",chain:"yochne-maadidhu" },
+  "forget":   { madi:"marathbedi",gerund:"marethaa",past:"marethde", present:"marethini", chain:"marethu" },
+  "remember": { madi:"nenpu-itkoli",gerund:"nenpu-itkothaa",past:"nenpu-itkonde",present:"nenpu-itkothini",chain:"nenpu-itkondhu" },
+  "try":      { madi:"try-madi", gerund:"try-maadthaa",past:"try-maadde",present:"try-maadthini",chain:"try-maadidhu" },
+  "leave":    { madi:"bidu",     gerund:"bidthaa",  past:"bidde",    present:"bidthini",  chain:"biddhu" },
+  "stay":     { madi:"iru",      gerund:"irthaa",   past:"idde",     present:"irthini",   chain:"iddhu" },
+  "reach":    { madi:"reach-aagu",gerund:"reach-aagthaa",past:"reach-aaytu",present:"reach-aagthini",chain:"reach-aagidhu" },
+  "return":   { madi:"vapas-banni",gerund:"vapas-barthaa",past:"vapas-bande",present:"vapas-barthini",chain:"vapas-bandhu" },
+  "change":   { madi:"change-madi",gerund:"change-maadthaa",past:"change-maadde",present:"change-maadthini",chain:"change-maadidhu" },
+  "pick":     { madi:"thogoli",  gerund:"thogothaa",past:"thogonde", present:"thogothini",chain:"thogondhu" },
+  "drop":     { madi:"bidu",     gerund:"bidthaa",  past:"bidde",    present:"bidthini",  chain:"biddhu" },
+  "meet":     { madi:"meet-madi",gerund:"meet-maadthaa",past:"meet-maadde",present:"meet-maadthini",chain:"meet-maadidhu" },
+  "complete": { madi:"mugsu",    gerund:"mugsthaa", past:"mugside",  present:"mugsthini", chain:"mugsidhu" },
+  "prepare":  { madi:"ready-madi",gerund:"ready-maadthaa",past:"ready-maadde",present:"ready-maadthini",chain:"ready-maadidhu" },
+  "hold":     { madi:"hidkoli",  gerund:"hidkothaa",past:"hidkonde", present:"hidkothini",chain:"hidkondhu" },
+  "push":     { madi:"thallu",   gerund:"thallthaa",past:"thallide", present:"thallthini",chain:"thallidhu" },
+  "pull":     { madi:"eelu",     gerund:"eelthaa",  past:"eelde",    present:"eelthini",  chain:"eeldhu" },
+  "need":     { madi:"beku",     gerund:"beku",     past:"bekittu",  present:"beku",      chain:"beku" },
+  "want":     { madi:"beku",     gerund:"beku",     past:"bekittu",  present:"beku",      chain:"beku" },
+  "like":     { madi:"ishta",    gerund:"ishta",    past:"ishta-aaytu",present:"ishta",   chain:"ishta" },
+  "love":     { madi:"preeti-madi",gerund:"preeti-maadthaa",past:"preeti-maadde",present:"preeti-maadthini",chain:"preeti-maadidhu" },
+  "dance":    { madi:"kunee",    gerund:"kuneethaa",past:"kuneede",  present:"kuneethini",chain:"kuneedhu" },
+  "attend":   { madi:"attend-madi",gerund:"attend-maadthaa",past:"attend-maadde",present:"attend-maadthini",chain:"attend-maadidhu" },
+  "charge":   { madi:"charge-madi",gerund:"charge-maadthaa",past:"charge-maadde",present:"charge-maadthini",chain:"charge-maadidhu" },
+  "load":     { madi:"load-madi",gerund:"load-maadthaa",past:"load-maadde",present:"load-maadthini",chain:"load-maadidhu" },
+  "lock":     { madi:"lock-madi",gerund:"lock-maadthaa",past:"lock-maadde",present:"lock-maadthini",chain:"lock-maadidhu" },
+  "unlock":   { madi:"unlock-madi",gerund:"unlock-maadthaa",past:"unlock-maadde",present:"unlock-maadthini",chain:"unlock-maadidhu" },
+  "pack":     { madi:"pack-madi",gerund:"pack-maadthaa",past:"pack-maadde",present:"pack-maadthini",chain:"pack-maadidhu" },
+  "sign":     { madi:"sign-madi",gerund:"sign-maadthaa",past:"sign-maadde",present:"sign-maadthini",chain:"sign-maadidhu" },
+  "scan":     { madi:"scan-madi",gerund:"scan-maadthaa",past:"scan-maadde",present:"scan-maadthini",chain:"scan-maadidhu" },
+  "verify":   { madi:"verify-madi",gerund:"verify-maadthaa",past:"verify-aagide",present:"verify-maadthini",chain:"verify-maadidhu" },
 };
 
-// ─── Irregular verb form → base form lookup ────────────────────────────────
+// ─── VERB FORM RESOLVER ────────────────────────────────────────────────────
 const VERB_FORMS = {};
 (function() {
   const irregulars = {
@@ -181,24 +200,21 @@ const VERB_FORMS = {};
     "scanned":"scan","scanning":"scan","scans":"scan",
     "downloaded":"download","downloading":"download","downloads":"download",
     "charged":"charge","charging":"charge","charges":"charge",
+    "verified":"verify","verifying":"verify","verifies":"verify",
   };
-  // Add base forms
-  for (const base of Object.keys(VERBS)) {
-    VERB_FORMS[base] = base;
-  }
-  // Add irregulars
-  for (const [form, base] of Object.entries(irregulars)) {
-    VERB_FORMS[form] = base;
-  }
+  for (const base of Object.keys(VERBS)) VERB_FORMS[base] = base;
+  for (const [form, base] of Object.entries(irregulars)) VERB_FORMS[form] = base;
 })();
 
+function resolveVerb(w) { return VERB_FORMS[w.toLowerCase()] || null; }
 
-// ─── Nouns: any word not recognized gets "-u" appended ─────────────────────
+// ─── WORD DICTIONARIES ─────────────────────────────────────────────────────
+
 const KNOWN_NOUNS = new Set([
   "bus","office","store","bill","shop","auto","metro","train","ticket",
-  "phone","laptop","bag","card","cash","change","food","coffee","tea",
+  "phone","laptop","bag","card","cash","food","coffee","tea",
   "water","juice","milk","rice","lunch","dinner","breakfast","snack",
-  "room","house","flat","road","signal","bridge","mall","park","hotel",
+  "room","house","home","flat","road","signal","bridge","mall","park","hotel",
   "hospital","school","college","temple","church","mosque","market",
   "meeting","class","exam","job","salary","rent","deposit","loan",
   "tax","fine","receipt","form","file","report","mail","message",
@@ -209,74 +225,77 @@ const KNOWN_NOUNS = new Set([
   "light","tubelight","bulb","fan","ac","tv","fridge","oven",
   "bike","car","scooter","cycle","truck","van","cab","uber","ola",
   "shirt","pant","dress","shoe","chappal","belt","watch","ring",
-  "book","pen","paper","note","photo","video","song","movie",
+  "pen","paper","note","photo","video","song","movie",
   "money","rupee","paisa","coin","wallet","purse","atm","bank",
   "doctor","teacher","driver","cook","maid","guard","plumber","electrician",
   "brother","sister","friend","uncle","aunty","boss","sir","madam",
-  "morning","evening","night","afternoon","today","tomorrow","yesterday",
   "week","month","year","minute","hour","second",
   "place","area","side","corner","center","top","bottom","front","back",
   "problem","issue","reason","answer","question","idea","thing","stuff",
   "clothes","vehicle","medicine","tablet","injection","test","result",
+  "book","change",
 ]);
 
-// ─── Question words ────────────────────────────────────────────────────────
+// Special nouns with Kannada equivalents
+const NOUN_MAP = {
+  "home": "mane", "house": "mane", "food": "oota", "water": "neeru",
+  "work": "kelsa", "money": "dud-du",
+};
+
 const QUESTION_WORDS = {
-  "where": "yelli", "when": "yavaga", "how much": "eshtu",
-  "how many": "eshtu", "how": "hege", "what": "yenu",
-  "why": "yaake", "who": "yaaru", "which": "yaavudu",
+  "where":"yelli","when":"yavaga","how much":"eshtu","how many":"eshtu",
+  "how":"hege","what":"yenu","why":"yaake","who":"yaaru","which":"yaavudu",
 };
 
-// ─── Time / adverb words ──────────────────────────────────────────────────
 const ADVERBS = {
-  "tomorrow": "naaleki", "today": "ivattu", "yesterday": "ninne",
-  "now": "eega", "later": "amele", "quickly": "begne",
-  "slowly": "nidhaanvaagi", "already": "aagale", "again": "innomme",
-  "here": "illi", "there": "alli", "always": "yavaglu",
-  "never": "yaavaglu illa", "sometimes": "kelavu sarti",
-  "morning": "beligge", "evening": "saanje", "night": "raathri",
-  "afternoon": "madhyaahna", "daily": "dinaa", "soon": "begne",
-  "first": "modlu", "then": "amele", "after": "amele",
-  "before": "munche", "together": "serthu", "alone": "ondu",
-  "outside": "horage", "inside": "olage", "up": "mele", "down": "kelage",
-  "very": "thumba", "little": "swalpa", "more": "innashtu", "less": "kammi",
-  "much": "thumba", "many": "thumba", "enough": "saaku",
+  "tomorrow":"naaleki","today":"ivattu","yesterday":"ninne",
+  "now":"eega","later":"amele","quickly":"begne","slowly":"nidhaanvaagi",
+  "already":"aagale","again":"innomme",
+  "here":"illi","there":"alli","always":"yavaglu",
+  "never":"yaavaglu illa","sometimes":"kelavu sarti",
+  "morning":"beligge","evening":"saanje","night":"raathri",
+  "afternoon":"madhyaahna","daily":"dinaa","soon":"begne",
+  "first":"modlu","then":"amele","after":"amele","before":"munche",
+  "together":"serthu","alone":"ondu",
+  "outside":"horage","inside":"olage","up":"mele","down":"kelage",
+  "very":"thumba","little":"swalpa","more":"innashtu","less":"kammi",
+  "much":"thumba","many":"thumba","enough":"saaku",
 };
 
-// ─── Pronouns & misc ──────────────────────────────────────────────────────
-const PRONOUNS = {
-  "i": "naanu", "me": "nanage", "my": "nanna", "mine": "nanadu",
-  "you": "neenu", "your": "ninna", "yours": "ninadu",
-  "he": "avnu", "him": "avanige", "his": "avna",
-  "she": "avlu", "her": "avalige",
-  "we": "naavu", "our": "namma", "us": "namage",
-  "they": "avru", "them": "avrige", "their": "avra",
-  "it": "adu", "this": "idu", "that": "adu",
-  "these": "ivugalu", "those": "avugalu",
+// Subject pronouns → Kannada (nominative)
+const SUBJ_PRONOUNS = {
+  "i":"naanu","you":"neenu","he":"avnu","she":"avlu",
+  "we":"naavu","they":"avru","it":"adu","this":"idu","that":"adu",
+};
+// Object/indirect pronouns → Kannada with case marker
+const OBJ_PRONOUNS = {
+  "me":"nanage","him":"avanige","her":"avalige",
+  "us":"namage","them":"avrige","it":"adannu","this":"idannu","that":"adannu",
+};
+const POSSESSIVES = {
+  "my":"nanna","your":"ninna","his":"avna","her":"avala",
+  "our":"namma","their":"avra","its":"adara",
 };
 
 const MISC_WORDS = {
-  "yes": "haudu", "no": "illa", "not": "illa",
-  "ok": "sari", "okay": "sari", "fine": "sari",
-  "good": "chennaagi", "bad": "kelsa illa",
-  "big": "doddu", "small": "chikku",
-  "new": "hosa", "old": "halae",
-  "hot": "bisi", "cold": "thandi",
-  "fast": "begne", "slow": "nidhaana",
-  "right": "sari", "wrong": "tappu",
-  "all": "ella", "some": "kelavu", "any": "yaavdu",
-  "also": "kooda", "too": "kooda", "only": "ashte",
-  "but": "aadre", "and": "mathu", "or": "athva",
-  "if": "andre", "because": "yaakandre",
-  "with": "jothege", "without": "illade",
-  "please": "dayavittu", "sorry": "sorry",
-  "thanks": "dhanyavaada", "thank": "dhanyavaada",
-  "sir": "sir", "madam": "madam",
-  "really": "nijvaaglu", "maybe": "belki",
-  "sure": "khachit", "definitely": "khachit",
+  "yes":"haudu","no":"illa","not":"illa",
+  "ok":"sari","okay":"sari","fine":"sari",
+  "good":"chennaagi","bad":"kelsa illa",
+  "big":"doddu","small":"chikku","new":"hosa","old":"halae",
+  "hot":"bisi","cold":"thandi","fast":"begne","slow":"nidhaana",
+  "right":"sari","wrong":"tappu",
+  "all":"ella","some":"kelavu","any":"yaavdu",
+  "also":"kooda","too":"kooda","only":"ashte",
+  "but":"aadre","and":"mathu","or":"athva",
+  "if":"andre","because":"yaakandre",
+  "with":"jothege","without":"illade",
+  "please":"dayavittu","sorry":"sorry",
+  "thanks":"dhanyavaada","thank":"dhanyavaada",
+  "sir":"sir","madam":"madam",
+  "really":"nijvaaglu","maybe":"belki",
+  "sure":"khachit","definitely":"khachit",
 };
 
-// Words that stay as-is in Kanglish (English loanwords common in Bengaluru)
 const LOANWORDS = new Set([
   "late","early","free","busy","ready","full","empty","fresh","nice",
   "tension","chance","adjust","manage","settle","pending",
@@ -286,10 +305,23 @@ const LOANWORDS = new Set([
   "strict","tight","loose","heavy","strong","weak",
   "happy","sad","angry","tired","bored","confused","worried",
   "online","offline","available",
-  "cleaning","washing","cooking","shopping","parking","packing",
 ]);
 
-// ─── Tamil → Kanglish word map ─────────────────────────────────────────────
+const NUMBER_WORDS = {
+  "one":"ondu","two":"eradu","three":"mooru","four":"naaku",
+  "five":"aidu","six":"aaru","seven":"yelu","eight":"entu",
+  "nine":"ombattu","ten":"hattu",
+};
+
+// English structural words to ignore during parsing
+const SKIP_WORDS = new Set([
+  "the","a","an","is","are","am","was","were","be","been","being",
+  "do","does","did","will","shall","would","could","should","can","may","might",
+  "have","has","had","just","about","between","through","during","not",
+]);
+
+// ─── TAMIL DICTIONARIES ───────────────────────────────────────────────────
+
 const TAMIL_MAP = {
   "enge":"yelli","enga":"yelli","eppo":"yavaga","eppadi":"hege",
   "evvalo":"eshtu","yenna":"yenu","enna":"yenu","yaaru":"yaaru","yaar":"yaaru",
@@ -318,9 +350,9 @@ const TAMIL_MAP = {
   "nanri":"dhanyavaada",
   "thogondu":"thogondu","eduthutu":"thogondu",
   "kondu":"thogondu","eduthu":"thogondu",
+  "vandhu":"bandhu","vandhuttu":"bandhidhu",
 };
 
-// Tamil phrase patterns
 const TAMIL_PHRASES = [
   [/\beppadi\s+irukkinga\b/i, "hege iddira?"],
   [/\beppadi\s+irukinga\b/i, "hege iddira?"],
@@ -335,472 +367,638 @@ const TAMIL_PHRASES = [
   [/\benna\s+aachu\b/i, "yenu aaytu?"],
   [/\bidu\s+enna\b/i, "idu yenu?"],
   [/\badu\s+enna\b/i, "adu yenu?"],
+  [/\bvandhu\s+saapdu\b/i, "bandhu tinni"],
+  [/\bvandhu\s+saapdunga\b/i, "bandhu tinnri"],
 ];
 
-// ─── English phrase patterns (full sentence matches) ───────────────────────
-const ENG_PHRASES = [
-  [/\bis\s+it\s+done\b/i, "aita?"],
-  [/\bare\s+you\s+done\b/i, "aita?"],
-  [/\bis\s+it\s+over\b/i, "aita?"],
-  [/\bhow\s+are\s+you\b/i, "hege iddira?"],
-  [/\b(?:please\s+)?wait\s+(?:i\s+am|i'm)\s+coming\b/i, "thadi, naanu barthini"],
-  [/\bi('| a)?m\s+fine\b/i, "naanu chennaagi iddini"],
+// ─── HELPERS ───────────────────────────────────────────────────────────────
 
-  // ── "can you come/go" polite request patterns ──
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+today\s+for\s+(\w+)\b/i, (m, task) => "ivattu swalpa late banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+tomorrow\s+for\s+(\w+)\b/i, (m, task) => "naaleki swalpa late banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+today\b/i, "ivattu swalpa late banni"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+tomorrow\b/i, "naaleki swalpa late banni"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\b/i, "swalpa late banni"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+early\s+today\b/i, "ivattu swalpa early banni"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+early\s+tomorrow\b/i, "naaleki swalpa early banni"],
-  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+early\b/i, "swalpa early banni"],
-  [/\bcan\s+you\s+come\s+early\s+tomorrow\s+for\s+(\w+)\b/i, (m, task) => "naaleki early banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+late\s+tomorrow\s+for\s+(\w+)\b/i, (m, task) => "naaleki late banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+early\s+today\s+for\s+(\w+)\b/i, (m, task) => "ivattu early banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+early\s+tomorrow\b/i, "naaleki early banni"],
-  [/\bcan\s+you\s+come\s+late\s+tomorrow\b/i, "naaleki late banni"],
-  [/\bcan\s+you\s+come\s+today\s+for\s+(\w+)\b/i, (m, task) => "ivattu banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+tomorrow\s+for\s+(\w+)\b/i, (m, task) => "naaleki banni, " + nounU(task) + " maadoke"],
-  [/\bcan\s+you\s+come\s+today\b/i, "ivattu banni"],
-  [/\bcan\s+you\s+come\s+tomorrow\b/i, "naaleki banni"],
-  [/\bcan\s+you\s+come\b/i, "banni"],
-  [/\bcan\s+you\s+(\w+)\s+(?:the\s+)?(\w+)\b/i, (m, verb, obj) => {
-    const base = VERB_FORMS[verb.toLowerCase()];
-    const v = base && VERBS[base] ? VERBS[base].madi : verb + "-madi";
-    return nounU(obj) + " " + v;
-  }],
-  [/\bcan\s+you\s+(\w+)\b/i, (m, verb) => {
-    const base = VERB_FORMS[verb.toLowerCase()];
-    if (base && VERBS[base]) return VERBS[base].madi;
-    return verb + "-madi";
-  }],
-  [/\bi\s+don'?t\s+know\b/i, "nanage gottilla"],
-  [/\bi\s+know\b/i, "nanage gottu"],
-  [/\bcome\s+early\s+tomorrow\s+for\s+(\w+)\b/i, (m, task) => {
-    const base = VERB_FORMS[task.toLowerCase()];
-    if (base && VERBS[base]) return "naaleki early banni, " + nounU(task) + " maadoke";
-    return "naaleki early banni, " + nounU(task) + "-ge";
-  }],
-  [/\bcome\s+early\s+tomorrow\b/i, "naaleki early banni"],
-  [/\bcome\s+late\s+tomorrow\b/i, "naaleki late banni"],
-  [/\bcome\s+early\s+today\b/i, "ivattu early banni"],
-  [/\bcome\s+here\b/i, "illi banni"],
-  [/\bgo\s+there\b/i, "alli hogi"],
-  [/\btell\s+(?:him|her|them)\s+to\s+come\b/i, (m) => {
-    const who = /him/i.test(m) ? "avanige" : /her/i.test(m) ? "avalige" : "avrige";
-    return who + " baa helu";
-  }],
-  [/\bno\s+problem\b/i, "yenu problem-u illa"],
-  [/\bwhat\s+happened\b/i, "yenu aaytu?"],
-  [/\bwhat('| i)?s\s+this\b/i, "idu yenu?"],
-  [/\bwhat('| i)?s\s+that\b/i, "adu yenu?"],
-  [/\bwhere\s+are\s+you\b/i, "yelli iddira?"],
-  [/\bwhen\s+are\s+you\s+coming\b/i, "yavaga barthira?"],
-  [/\blet('| u)?s\s+go\b/i, "hogona"],
-  [/\bdon'?t\s+want\b/i, "beda"],
-  [/\bi\s+want\s+(\w+)\b/i, (m, thing) => "nanage " + nounU(thing) + " beku"],
-  [/\bi\s+need\s+(\w+)\b/i, (m, thing) => "nanage " + nounU(thing) + " beku"],
-  [/\bi\s+want\b/i, "nanage beku"],
-  [/\bi\s+need\b/i, "nanage beku"],
-  [/\bthank\s+you\b/i, "dhanyavaada"],
-  [/\bthanks\b/i, "dhanyavaada"],
-  [/\bnot\s+possible\b/i, "aagalla"],
-  [/\bvery\s+good\b/i, "thumba chennaagi"],
-  [/\btoo\s+much\b/i, "thumba jaasti"],
-  [/\ba\s+little\b/i, "swalpa"],
-  [/\bis\s+(\w+)\s+done\??/i, (m, noun) => nounU(noun) + " aita?"],
-
-  // ── "please bring X while coming tomorrow" full-sentence patterns ──
-  [/\b(?:please\s+)?bring\s+(.+?)\s+while\s+coming\s+tomorrow\b/i, (m, obj) => "naaleki barthaa " + translateObject(obj) + " thogondu banni"],
-  [/\b(?:please\s+)?bring\s+(.+?)\s+while\s+coming\b/i, (m, obj) => "barthaa " + translateObject(obj) + " thogondu banni"],
-  [/\b(?:please\s+)?bring\s+(.+?)\s+tomorrow\b/i, (m, obj) => "naaleki " + translateObject(obj) + " thogondu banni"],
-  [/\bwhile\s+coming\s+tomorrow\s*,?\s*(?:please\s+)?bring\s+(.+)/i, (m, obj) => "naaleki barthaa, " + translateObject(obj) + " thogondu banni"],
-  [/\bwhile\s+coming\s*,?\s*(?:please\s+)?bring\s+(.+)/i, (m, obj) => "barthaa, " + translateObject(obj) + " thogondu banni"],
-  [/\b(?:please\s+)?bring\s+(.+)/i, (m, obj) => translateObject(obj) + " thogondu banni"],
-
-  // ── "while coming/going" patterns ──
-  [/\bwhile\s+coming\s+tomorrow\b/i, "naaleki barthaa"],
-  [/\bwhile\s+going\s+to\s+(\w+)\b/i, (m, place) => nounU(place) + "-ge hogthaa"],
-  [/\bwhile\s+coming\s+to\s+(\w+)\b/i, (m, place) => nounU(place) + "-ge barthaa"],
-  [/\bwhile\s+coming\b/i, "barthaa"],
-  [/\bwhile\s+going\b/i, "hogthaa"],
-  [/\bto\s+(\w+)\b/i, (m, place) => {
-    if (KNOWN_NOUNS.has(place.toLowerCase())) return nounU(place) + "-ge";
-    return m;
-  }],
-];
-
-
-// ─── Helper: add "-u" to nouns ─────────────────────────────────────────────
 function nounU(word) {
   const w = word.toLowerCase();
   if (/[aeiou]$/.test(w)) return w;
   return w + "-u";
 }
 
-// ─── Helper: translate an object phrase like "two tubelights", "my bag" ────
-function translateObject(objStr) {
-  const NUMBER_WORDS = {
-    "one":"ondu","two":"eradu","three":"mooru","four":"naaku",
-    "five":"aidu","six":"aaru","seven":"yelu","eight":"entu",
-    "nine":"ombattu","ten":"hattu",
+// Translate a noun to Kanglish: use NOUN_MAP if available, else add -u
+function kannadaNoun(word) {
+  const w = word.toLowerCase().replace(/s$/, "");
+  if (NOUN_MAP[w]) return NOUN_MAP[w];
+  return nounU(w);
+}
+
+// Translate any single word to its Kanglish form
+function translateWord(word) {
+  const w = word.toLowerCase();
+  if (NUMBER_WORDS[w]) return NUMBER_WORDS[w];
+  if (/^\d+$/.test(w)) return w;
+  if (POSSESSIVES[w]) return POSSESSIVES[w];
+  if (SUBJ_PRONOUNS[w]) return SUBJ_PRONOUNS[w];
+  if (OBJ_PRONOUNS[w]) return OBJ_PRONOUNS[w];
+  if (ADVERBS[w]) return ADVERBS[w];
+  if (MISC_WORDS[w]) return MISC_WORDS[w];
+  if (LOANWORDS.has(w)) return w;
+  if (NOUN_MAP[w]) return NOUN_MAP[w];
+  const cleaned = w.replace(/s$/, "");
+  if (KNOWN_NOUNS.has(w)) return nounU(w);
+  if (KNOWN_NOUNS.has(cleaned)) return nounU(cleaned);
+  // Unknown word → noun-u
+  if (/^[a-zA-Z]{2,}$/.test(w)) return nounU(cleaned);
+  return w;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE DRAVIDIAN BRIDGE — Semantic Parser + SOV Assembler
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Expand contractions before parsing
+function expandContractions(text) {
+  return text
+    .replace(/\bi'm\b/gi, "I am")
+    .replace(/\bi'll\b/gi, "I will")
+    .replace(/\bi've\b/gi, "I have")
+    .replace(/\bi'd\b/gi, "I would")
+    .replace(/\byou're\b/gi, "you are")
+    .replace(/\byou'll\b/gi, "you will")
+    .replace(/\byou've\b/gi, "you have")
+    .replace(/\bhe's\b/gi, "he is")
+    .replace(/\bshe's\b/gi, "she is")
+    .replace(/\bit's\b/gi, "it is")
+    .replace(/\bwe're\b/gi, "we are")
+    .replace(/\bwe'll\b/gi, "we will")
+    .replace(/\bthey're\b/gi, "they are")
+    .replace(/\bthey'll\b/gi, "they will")
+    .replace(/\bthat's\b/gi, "that is")
+    .replace(/\bwhat's\b/gi, "what is")
+    .replace(/\bwhere's\b/gi, "where is")
+    .replace(/\bwho's\b/gi, "who is")
+    .replace(/\bdon't\b/gi, "do not")
+    .replace(/\bdoesn't\b/gi, "does not")
+    .replace(/\bdidn't\b/gi, "did not")
+    .replace(/\bcan't\b/gi, "cannot")
+    .replace(/\bcannot\b/gi, "can not")
+    .replace(/\bwon't\b/gi, "will not")
+    .replace(/\bwouldn't\b/gi, "would not")
+    .replace(/\bshouldn't\b/gi, "should not")
+    .replace(/\bcouldn't\b/gi, "could not")
+    .replace(/\blet's\b/gi, "let us")
+    .replace(/\bain't\b/gi, "is not")
+    .replace(/\bhasn't\b/gi, "has not")
+    .replace(/\bhaven't\b/gi, "have not");
+}
+
+// ─── Detect tense from English words ───────────────────────────────────────
+function detectTense(words) {
+  const joined = words.join(" ").toLowerCase();
+  // Negation
+  if (/\bnot\b/.test(joined) || /\bdo not\b/.test(joined)) return "negative";
+  // "is X done" → completion query
+  if (/\bis\s+\w+\s+done/.test(joined)) return "aita";
+  // Progressive: "am/is/are + verb-ing" (but not base forms like "bring")
+  if (/\b(am|is|are)\s+\w+ing\b/.test(joined)) {
+    // Verify the -ing word is actually a progressive form, not a base form
+    const ingMatch = joined.match(/\b(am|is|are)\s+(\w+ing)\b/);
+    if (ingMatch) {
+      const ingWord = ingMatch[2];
+      const base = resolveVerb(ingWord);
+      if (base && base !== ingWord) return "present"; // genuine progressive
+    }
+  }
+  // Past: "did", past verb forms, "already", "yesterday"
+  if (/\b(did|already|yesterday)\b/.test(joined)) return "past";
+  for (const w of words) {
+    const base = resolveVerb(w);
+    if (base && base !== w.toLowerCase() && !w.toLowerCase().endsWith("ing") && !w.toLowerCase().endsWith("s")) {
+      return "past";
+    }
+  }
+  // Future: "will", "shall"
+  if (/\b(will|shall)\b/.test(joined)) return "present"; // future → present in Kannada
+  // Imperative: starts with verb or "please"
+  const first = words[0] && words[0].toLowerCase();
+  if (first === "please" || (resolveVerb(first) && !SUBJ_PRONOUNS[first])) return "command";
+  // "can you" → polite command
+  if (/\bcan\s+(you|i)\b/.test(joined)) return "command";
+  // "let us" → suggestion
+  if (/\blet\s+us\b/.test(joined)) return "suggestion";
+  // If starts with subject pronoun → present
+  if (SUBJ_PRONOUNS[first]) return "present";
+  return "command"; // default
+}
+
+// ─── Parse English into semantic roles ─────────────────────────────────────
+// Returns: { subject, verb, verbBase, object, indirectObj, time, location,
+//            purpose, adverbs, question, tense, negated, verbChain, emphasis }
+function parseEnglish(text) {
+  const expanded = expandContractions(text);
+  const words = expanded.replace(/[?.!,]/g, " ").split(/\s+/).filter(Boolean);
+  const isQuestion = /\?/.test(text);
+
+  const roles = {
+    subject: null, verb: null, verbBase: null, object: [],
+    indirectObj: null, time: [], location: null,
+    purpose: null, adverbs: [], question: null,
+    tense: "command", negated: false, verbChain: [],
+    emphasis: null, whileClause: null, loanAdj: [],
   };
-  return objStr.trim().split(/\s+/).map(w => {
-    const lower = w.toLowerCase();
-    if (NUMBER_WORDS[lower]) return NUMBER_WORDS[lower];
-    if (/^\d+$/.test(w)) return w;
-    if (PRONOUNS[lower]) return PRONOUNS[lower];
-    // strip plural
-    const cleaned = lower.replace(/s$/, "");
-    if (KNOWN_NOUNS.has(lower)) return nounU(lower);
-    if (KNOWN_NOUNS.has(cleaned)) return nounU(cleaned);
-    // strip plural for unknown words too
-    if (/^[a-zA-Z]{3,}s$/.test(w)) return nounU(cleaned);
-    // unknown word → noun-u
-    if (/^[a-zA-Z]{2,}$/.test(w)) return nounU(lower);
-    return w;
-  }).join(" ");
+
+  // Detect question word
+  const joinedLower = words.map(w => w.toLowerCase()).join(" ");
+  const sortedQ = Object.entries(QUESTION_WORDS).sort((a, b) => b[0].length - a[0].length);
+  for (const [eng, kan] of sortedQ) {
+    if (joinedLower.includes(eng)) {
+      roles.question = kan;
+      // Remove question words from the word list
+      const qWords = eng.split(" ");
+      for (const qw of qWords) {
+        const idx = words.findIndex(w => w.toLowerCase() === qw);
+        if (idx >= 0) words.splice(idx, 1);
+      }
+      break;
+    }
+  }
+
+  roles.tense = detectTense(words);
+
+  let i = 0;
+  while (i < words.length) {
+    const w = words[i].toLowerCase();
+    const next = i + 1 < words.length ? words[i + 1] : null;
+    const nextLow = next ? next.toLowerCase() : "";
+
+    // Skip structural words
+    if (SKIP_WORDS.has(w)) {
+      // Track negation but don't output "illa"
+      if (w === "not") roles.negated = true;
+      i++; continue;
+    }
+
+    // "while/when + verb-ing" → while clause
+    if ((w === "while" || w === "when") && next && resolveVerb(nextLow)) {
+      const vb = resolveVerb(nextLow);
+      roles.whileClause = vb;
+      i += 2; continue;
+    }
+
+    // "and + verb" → verb chain (come and eat → bandhu tinni)
+    if (w === "and" && next && resolveVerb(nextLow)) {
+      const vb = resolveVerb(nextLow);
+      if (vb && VERBS[vb]) roles.verbChain.push(vb);
+      i += 2; continue;
+    }
+
+    // Prepositions with case markers
+    if (w === "to" && next) {
+      // "to + verb" → purpose
+      if (resolveVerb(nextLow)) {
+        roles.purpose = resolveVerb(nextLow);
+        i += 2; continue;
+      }
+      // skip "the" after "to"
+      let targetIdx = i + 1;
+      let target = nextLow;
+      if (target === "the" && i + 2 < words.length) {
+        targetIdx = i + 2;
+        target = words[targetIdx].toLowerCase();
+      }
+      // "to + noun" → location/indirect object with -ge
+      // If it's a person pronoun, it's indirect object
+      if (OBJ_PRONOUNS[target] || SUBJ_PRONOUNS[target]) {
+        roles.indirectObj = target;
+      } else {
+        roles.location = { word: target, marker: "-ge" };
+      }
+      i = targetIdx + 1; continue;
+    }
+    if (w === "for" && next) {
+      let target = nextLow;
+      let targetIdx = i + 1;
+      if (target === "the" && i + 2 < words.length) {
+        targetIdx = i + 2;
+        target = words[targetIdx].toLowerCase();
+      }
+      // "for + verb-ing" → purpose
+      if (resolveVerb(target)) {
+        roles.purpose = resolveVerb(target);
+        i = targetIdx + 1; continue;
+      }
+      // "for + pronoun" → indirect object
+      if (OBJ_PRONOUNS[target] || SUBJ_PRONOUNS[target]) {
+        roles.indirectObj = target;
+        i = targetIdx + 1; continue;
+      }
+      // "for + noun" → purpose noun
+      roles.purpose = target;
+      i = targetIdx + 1; continue;
+    }
+    if ((w === "in" || w === "at") && next) {
+      let target = nextLow;
+      let targetIdx = i + 1;
+      if (target === "the" && i + 2 < words.length) {
+        targetIdx = i + 2;
+        target = words[targetIdx].toLowerCase();
+      }
+      roles.location = { word: target, marker: "-alli" };
+      i = targetIdx + 1; continue;
+    }
+    if (w === "from" && next) {
+      let target = nextLow;
+      let targetIdx = i + 1;
+      if (target === "the" && i + 2 < words.length) {
+        targetIdx = i + 2;
+        target = words[targetIdx].toLowerCase();
+      }
+      roles.location = { word: target, marker: "-inda" };
+      i = targetIdx + 1; continue;
+    }
+
+    // Subject pronouns
+    if (SUBJ_PRONOUNS[w] && !roles.subject && !roles.verb) {
+      roles.subject = w;
+      i++; continue;
+    }
+
+    // Possessive + noun → object
+    if (POSSESSIVES[w] && next) {
+      const nounWord = nextLow.replace(/s$/, "");
+      roles.object.push(POSSESSIVES[w] + " " + kannadaNoun(nounWord));
+      i += 2; continue;
+    }
+
+    // Time words
+    if (ADVERBS[w] && ["naaleki","ivattu","ninne","beligge","saanje","raathri","madhyaahna","eega","amele","munche"].includes(ADVERBS[w])) {
+      roles.time.push(ADVERBS[w]);
+      i++; continue;
+    }
+
+    // Other adverbs
+    if (ADVERBS[w]) {
+      roles.adverbs.push(ADVERBS[w]);
+      i++; continue;
+    }
+
+    // Loanwords (adjectives that stay as-is)
+    if (LOANWORDS.has(w)) {
+      roles.loanAdj.push(w);
+      i++; continue;
+    }
+
+    // Misc words
+    if (MISC_WORDS[w]) {
+      roles.adverbs.push(MISC_WORDS[w]);
+      i++; continue;
+    }
+
+    // Verb
+    const vBase = resolveVerb(w);
+    if (vBase && VERBS[vBase] && !roles.verb) {
+      roles.verb = w;
+      roles.verbBase = vBase;
+      // Detect if this is an -ing form (progressive) — but not base forms ending in "ing"
+      if (w.endsWith("ing") && VERB_FORMS[w] && VERB_FORMS[w] !== w) {
+        roles.tense = roles.subject ? "present" : "gerund";
+      }
+      // Check if next word is a directional noun (go home, come home)
+      const nextW = (i + 1 < words.length) ? words[i + 1].toLowerCase() : "";
+      if ((vBase === "go" || vBase === "come" || vBase === "return") && 
+          (KNOWN_NOUNS.has(nextW) || NOUN_MAP[nextW])) {
+        roles.location = { word: nextW, marker: "-ge" };
+        i += 2; continue;
+      }
+      i++; continue;
+    }
+
+    // Indirect object pronouns
+    if (OBJ_PRONOUNS[w]) {
+      roles.indirectObj = w;
+      i++; continue;
+    }
+
+    // Number words
+    if (NUMBER_WORDS[w]) {
+      roles.object.push(NUMBER_WORDS[w]);
+      i++; continue;
+    }
+    if (/^\d+$/.test(words[i])) {
+      roles.object.push(words[i]);
+      i++; continue;
+    }
+
+    // Nouns → object
+    const cleaned = w.replace(/s$/, "");
+    if (KNOWN_NOUNS.has(w) || KNOWN_NOUNS.has(cleaned)) {
+      roles.object.push(kannadaNoun(w));
+      i++; continue;
+    }
+
+    // Unknown word → treat as noun object
+    if (/^[a-zA-Z]{2,}$/.test(words[i])) {
+      roles.object.push(nounU(cleaned));
+      i++; continue;
+    }
+
+    i++;
+  }
+
+  return roles;
 }
 
-// ─── Detect if a word is an -ing verb form ─────────────────────────────────
-function isIngForm(word) {
-  return word.toLowerCase().endsWith("ing") && VERB_FORMS[word.toLowerCase()];
+// ─── SOV ASSEMBLER ─────────────────────────────────────────────────────────
+// Dravidian order: Time → Subject → Location → IndObj(-ge) → Object → Verb
+function assembleKanglish(roles) {
+  const parts = [];
+
+  // 1. Time
+  if (roles.time.length) parts.push(roles.time.join(" "));
+
+  // 2. While-clause (gerund)
+  if (roles.whileClause && VERBS[roles.whileClause]) {
+    parts.push(VERBS[roles.whileClause].gerund);
+  }
+
+  // 3. Subject
+  if (roles.subject) {
+    const skipSubject = (roles.tense === "command" || roles.tense === "suggestion") && roles.verbBase;
+    if (!skipSubject) {
+      if ((roles.verbBase === "want" || roles.verbBase === "need")) {
+        const dativeMap = { "i":"nanage","you":"ninage","he":"avanige","she":"avalige","we":"namage","they":"avrige" };
+        parts.push(dativeMap[roles.subject] || SUBJ_PRONOUNS[roles.subject]);
+      } else {
+        parts.push(SUBJ_PRONOUNS[roles.subject] || roles.subject);
+      }
+    }
+  }
+
+  // 4. Adverbs (before loan adjectives for natural order: "yavaglu late")
+  if (roles.adverbs.length) parts.push(roles.adverbs.join(" "));
+
+  // 5. Loan adjectives (late, early, etc.)
+  if (roles.loanAdj.length) parts.push(roles.loanAdj.join(" "));
+
+  // 6. Location with case marker
+  if (roles.location) {
+    const w = roles.location.word.toLowerCase().replace(/s$/, "");
+    const marker = roles.location.marker;
+    const base = NOUN_MAP[w] || w;
+    // For -ge (dative/directional), don't add -u: driver-ge, office-ge
+    if (marker === "-ge") {
+      parts.push(base + "-ge");
+    } else if (/[aeiou]$/.test(base)) {
+      parts.push(base + marker);
+    } else {
+      parts.push(base + "-u" + marker);
+    }
+  }
+
+  // 7. Indirect object with -ge (dative)
+  if (roles.indirectObj) {
+    const io = OBJ_PRONOUNS[roles.indirectObj] || SUBJ_PRONOUNS[roles.indirectObj];
+    if (io) {
+      parts.push(io);
+    } else {
+      parts.push(kannadaNoun(roles.indirectObj) + "-ge");
+    }
+  }
+
+  // 8. Object
+  if (roles.object.length) parts.push(roles.object.join(" "));
+
+  // 9. Question word (in Kannada, question words often go near the verb)
+  if (roles.question) parts.push(roles.question);
+
+  // 10. Purpose
+  if (roles.purpose) {
+    if (VERBS[roles.purpose]) {
+      // "to eat" → "tinni-okke", "to come" → "banni-okke" → but for "tell X to come" use madi
+      // Only add -okke for genuine purpose clauses, not "tell him to come"
+      if (roles.verbBase === "tell" || roles.verbBase === "say" || roles.verbBase === "ask") {
+        // "tell him to come" → "avanige baa helu" (not purpose)
+        // The purpose verb becomes the main instruction
+        roles.verbChain = [roles.purpose];
+        roles.purpose = null;
+      } else {
+        parts.push(VERBS[roles.purpose].madi.split(" ")[0] + "-okke");
+      }
+    } else {
+      // "for meeting" → "meeting-ge"
+      parts.push(kannadaNoun(roles.purpose) + "-ge");
+    }
+  }
+
+  // 11. Verb chain (adverbial participle: "come and eat" → "bandhu tinni")
+  if (roles.verbBase && VERBS[roles.verbBase]) {
+    const v = VERBS[roles.verbBase];
+
+    // Special: want/need → "X beku"
+    if (roles.verbBase === "want" || roles.verbBase === "need") {
+      parts.push("beku");
+    }
+    // Special: bring → always ends with "thogondu banni" in commands
+    else if (roles.verbBase === "bring" && (roles.tense === "command" || roles.tense === "negative")) {
+      if (roles.negated) {
+        parts.push("thogondu bar-bedi");
+      } else {
+        parts.push("thogondu banni");
+      }
+    }
+    // Special: "tell/ask X to Y" → "X-ge Y heli/kelu"
+    else if ((roles.verbBase === "tell" || roles.verbBase === "say" || roles.verbBase === "ask") && roles.verbChain.length) {
+      const targetVerb = roles.verbChain[roles.verbChain.length - 1];
+      if (VERBS[targetVerb]) {
+        parts.push(VERBS[targetVerb].madi);
+      }
+      parts.push(v.madi); // heli / kelu
+    }
+    // If there's a verb chain, use chain form for first verb
+    else if (roles.verbChain.length) {
+      parts.push(v.chain);
+      for (let ci = 0; ci < roles.verbChain.length - 1; ci++) {
+        const mv = VERBS[roles.verbChain[ci]];
+        if (mv) parts.push(mv.chain);
+      }
+      const lastVerb = roles.verbChain[roles.verbChain.length - 1];
+      const lastV = VERBS[lastVerb];
+      if (lastV) parts.push(conjugate(lastV, roles));
+    } else {
+      // Negation
+      if (roles.negated) {
+        if (roles.tense === "command" || roles.tense === "negative") {
+          parts.push(v.madi.split(" ")[0] + "-bedi");
+        } else {
+          parts.push(conjugate(v, roles) + " illa");
+        }
+      } else {
+        parts.push(conjugate(v, roles));
+      }
+    }
+  }
+
+  // 12. Suggestion
+  if (roles.tense === "suggestion" && roles.verbBase) {
+    // Already handled above, but add -ona suffix
+  }
+
+  const result = parts.filter(Boolean).join(" ");
+  return result;
 }
 
-// ─── Resolve any verb form to its base ─────────────────────────────────────
-function resolveVerb(word) {
-  return VERB_FORMS[word.toLowerCase()] || null;
+// Conjugate verb based on tense and subject
+function conjugate(v, roles) {
+  switch (roles.tense) {
+    case "command":    return v.madi;
+    case "present":    return conjugatePresent(v, roles.subject);
+    case "past":       return conjugatePast(v, roles.subject);
+    case "gerund":     return v.gerund;
+    case "suggestion": return v.madi.split(" ")[0] + "-ona"; // hogona, maadona
+    case "aita":       return "aita?";
+    case "negative":   return v.madi.split(" ")[0] + "-bedi";
+    default:           return v.madi;
+  }
 }
 
-// ─── Detect tense/mood of a verb in context ────────────────────────────────
-// Returns: "gerund" | "past" | "command" | "present" | null
-function detectVerbMood(words, idx) {
-  const w = words[idx].toLowerCase();
-  const prev = idx > 0 ? words[idx - 1].toLowerCase() : "";
-  const prev2 = idx > 1 ? words[idx - 2].toLowerCase() : "";
-
-  // "while coming", "while going" → gerund
-  if (prev === "while" || prev === "when" || prev === "before" || prev === "after") {
-    return "gerund";
-  }
-  // "-ing" form → gerund
-  if (w.endsWith("ing") && VERB_FORMS[w]) {
-    return "gerund";
-  }
-  // past tense indicators
-  if (prev === "already" || prev === "just" || prev2 === "did") {
-    return "past";
-  }
-  // Check if the word itself is a known past form
-  const base = VERB_FORMS[w];
-  if (base && base !== w && !w.endsWith("ing") && !w.endsWith("s")) {
-    // Likely a past/irregular form
-    return "past";
-  }
-  // "will come", "can go" → present/future (use madi for simplicity)
-  if (prev === "will" || prev === "can" || prev === "should" || prev === "must" || prev === "shall") {
-    return "command";
-  }
-  // bare imperative: "bring 2 tubelights"
-  if (idx === 0 || prev === "," || prev === "and" || prev === "then" || prev === "please" || prev === "also") {
-    if (VERBS[w]) return "command";
-  }
-
-  return "command"; // default for English input = polite command
+// Present tense varies by person
+function conjugatePresent(v, subject) {
+  const s = (subject || "").toLowerCase();
+  // First person: naanu barthini
+  if (s === "i") return v.present; // -thini form
+  // Second person: neenu barthiya
+  if (s === "you") return v.present.replace(/ini$/, "iya");
+  // Third person: avnu/avlu barthane/barthale
+  if (s === "he") return v.present.replace(/ini$/, "aane");
+  if (s === "she") return v.present.replace(/ini$/, "aale");
+  // Plural: naavu barthivi, avru barthare
+  if (s === "we") return v.present.replace(/ini$/, "ivi");
+  if (s === "they") return v.present.replace(/ini$/, "aare");
+  return v.present;
 }
 
-// ─── Glue words to strip (English structural words) ────────────────────────
-const STRIP_WORDS = new Set([
-  "the","a","an","is","are","am","was","were","be","been","being",
-  "do","does","did","will","shall","would","could","should","can","may","might",
-  "have","has","had","to","for","of","at","in","on","by","from",
-  "into","about","between","through","during","just",
-]);
+// Past tense varies by person
+function conjugatePast(v, subject) {
+  const s = (subject || "").toLowerCase();
+  if (s === "i") return v.past.replace(/e$/, "e"); // naanu bande
+  if (s === "he") return v.past.replace(/e$/, "a"); // avnu banda
+  if (s === "she") return v.past.replace(/e$/, "lu"); // avlu bandlu
+  if (s === "they") return v.past.replace(/e$/, "ru"); // avru bandru
+  return v.past;
+}
 
-// ─── Language detection ────────────────────────────────────────────────────
+// ─── FULL PHRASE PATTERNS (bypass parser for common idioms) ────────────────
+const ENG_PHRASES = [
+  [/\bis\s+it\s+done\b/i, "aita?"],
+  [/\bare\s+you\s+done\b/i, "aita?"],
+  [/\bis\s+it\s+over\b/i, "aita?"],
+  [/\bhow\s+are\s+you\b/i, "hege iddira?"],
+  [/\bi('m| am)\s+fine\b/i, "naanu chennaagi iddini"],
+  [/\bi\s+don'?t\s+know\b/i, "nanage gottilla"],
+  [/\bi\s+know\b/i, "nanage gottu"],
+  [/\bcome\s+here\b/i, "illi banni"],
+  [/\bgo\s+there\b/i, "alli hogi"],
+  [/\bno\s+problem\b/i, "yenu problem-u illa"],
+  [/\bwhat\s+happened\b/i, "yenu aaytu?"],
+  [/\bwhat('s| is)\s+this\b/i, "idu yenu?"],
+  [/\bwhat('s| is)\s+that\b/i, "adu yenu?"],
+  [/\bwhere\s+are\s+you\b/i, "yelli iddira?"],
+  [/\bwhen\s+are\s+you\s+coming\b/i, "yavaga barthira?"],
+  [/\blet('s| us)\s+go\b/i, "hogona"],
+  [/\bdon'?t\s+want\b/i, "beda"],
+  [/\bthank\s+you\b/i, "dhanyavaada"],
+  [/\bthanks\b/i, "dhanyavaada"],
+  [/\bnot\s+possible\b/i, "aagalla"],
+  [/\bvery\s+good\b/i, "thumba chennaagi"],
+  [/\btoo\s+much\b/i, "thumba jaasti"],
+  [/\bis\s+(\w+)\s+done\??/i, (m, noun) => kannadaNoun(noun) + " aita?"],
+  [/\b(?:please\s+)?wait[,.]?\s+(?:i'm|i am)\s+coming\b/i, "thadi, naanu barthini"],
+  // "can you come" patterns
+  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+today\s+for\s+(\w+)\b/i, (m, task) => "ivattu swalpa late banni, " + kannadaNoun(task) + " maadokke"],
+  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+today\b/i, "ivattu swalpa late banni"],
+  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\s+tomorrow\b/i, "naaleki swalpa late banni"],
+  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+late\b/i, "swalpa late banni"],
+  [/\bcan\s+you\s+come\s+(?:a\s+)?little\s+early\b/i, "swalpa early banni"],
+  [/\bcan\s+you\s+come\s+early\s+tomorrow\b/i, "naaleki early banni"],
+  [/\bcan\s+you\s+come\s+today\b/i, "ivattu banni"],
+  [/\bcan\s+you\s+come\s+tomorrow\b/i, "naaleki banni"],
+  [/\bcan\s+you\s+come\b/i, "banni"],
+];
+
+// ─── LANGUAGE DETECTION ────────────────────────────────────────────────────
 function detectLanguage(text) {
-  const words = text.toLowerCase().replace(/[?.!,]/g, "").split(/\s+/).filter(Boolean);
+  const words = text.toLowerCase().replace(/[?.!,']/g, "").split(/\s+/).filter(Boolean);
   let tamil = 0, english = 0;
   for (const w of words) {
     if (TAMIL_MAP[w]) tamil++;
-    if (VERB_FORMS[w] || ADVERBS[w] || PRONOUNS[w] || MISC_WORDS[w] ||
-        QUESTION_WORDS[w] || KNOWN_NOUNS.has(w) || STRIP_WORDS.has(w)) {
+    if (VERB_FORMS[w] || ADVERBS[w] || SUBJ_PRONOUNS[w] || OBJ_PRONOUNS[w] ||
+        MISC_WORDS[w] || QUESTION_WORDS[w] || KNOWN_NOUNS.has(w) || SKIP_WORDS.has(w) ||
+        POSSESSIVES[w] || LOANWORDS.has(w)) {
       english++;
     }
   }
+  // Tamil-specific sounds
+  if (/\b(zha|nga|ponga|vaanga|inga|anga|achu|aachu)\b/i.test(text)) tamil += 3;
   return tamil > english ? "tamil" : "english";
 }
 
-// ─── Tamil translator ──────────────────────────────────────────────────────
+// ─── TAMIL TRANSLATOR ─────────────────────────────────────────────────────
 function translateTamil(text) {
   let result = text;
   for (const [pat, rep] of TAMIL_PHRASES) {
-    if (typeof rep === "function") {
-      result = result.replace(pat, rep);
-    } else {
-      result = result.replace(pat, rep);
-    }
+    if (typeof rep === "function") result = result.replace(pat, rep);
+    else result = result.replace(pat, rep);
   }
   result = result.replace(/[a-zA-Z]+/g, (word) => {
     const lower = word.toLowerCase();
     const mapped = TAMIL_MAP[lower];
     if (mapped) {
       return word[0] === word[0].toUpperCase()
-        ? mapped.charAt(0).toUpperCase() + mapped.slice(1)
-        : mapped;
+        ? mapped.charAt(0).toUpperCase() + mapped.slice(1) : mapped;
     }
     return word;
   });
   return cleanUp(result);
 }
 
-// ─── English translator (the big one) ──────────────────────────────────────
+// ─── ENGLISH TRANSLATOR (Dravidian Bridge) ─────────────────────────────────
 function translateEnglish(text) {
-  let result = text;
-
-  // 1. Full phrase matches first
+  // 1. Try full phrase matches first
   for (const [pat, rep] of ENG_PHRASES) {
-    if (pat.test(result)) {
-      if (typeof rep === "function") {
-        result = result.replace(pat, rep);
-      } else {
-        result = result.replace(pat, rep);
-      }
+    if (pat.test(text)) {
+      if (typeof rep === "function") return cleanUp(text.replace(pat, rep));
+      return cleanUp(rep);
     }
   }
 
-  // 2. Multi-word question words
-  const sortedQ = Object.entries(QUESTION_WORDS).sort((a, b) => b[0].length - a[0].length);
-  for (const [eng, kan] of sortedQ) {
-    result = result.replace(new RegExp("\\b" + eng + "\\b", "gi"), kan);
-  }
-
-  // 3. Tokenize and translate word by word
-  const tokens = result.split(/(\s+|,|\.|\?|!)/);
-  const outTokens = [];
-  let skipNext = false;
-
-  for (let i = 0; i < tokens.length; i++) {
-    const tok = tokens[i];
-
-    // Preserve whitespace / punctuation
-    if (/^(\s+|,|\.|\?|!)$/.test(tok)) {
-      outTokens.push(tok);
-      continue;
-    }
-
-    if (skipNext) { skipNext = false; continue; }
-
-    const lower = tok.toLowerCase();
-
-    // Already translated (from phrase matching)?
-    if (lower.includes("-") || /^[a-z]+(thu|thaa|tta|dde|nde|idu|ira|ini|lli|agu|eke|ttu)$/i.test(lower)) {
-      outTokens.push(tok);
-      continue;
-    }
-
-    // "while" → skip it, the next verb will use gerund
-    if (lower === "while" || lower === "when" && i + 2 < tokens.length) {
-      // Check if next meaningful token is a verb
-      const nextWord = getNextWord(tokens, i);
-      if (nextWord && resolveVerb(nextWord)) {
-        // Don't output "while", the verb gerund handles it
-        continue;
-      }
-    }
-
-    // "for + verb-ing" → "<noun>-u maadoke" (purpose)
-    // "for + noun" → "<noun>-ge" (destination/purpose)
-    if (lower === "for") {
-      const nextWord = getNextWord(tokens, i);
-      if (nextWord) {
-        const nextLower = nextWord.toLowerCase();
-        const nextBase = resolveVerb(nextLower);
-        if (nextBase && VERBS[nextBase]) {
-          // "for cleaning" → "cleaning-u maadoke"
-          outTokens.push(nounU(nextLower) + " maadoke");
-          for (let j = i + 1; j < tokens.length; j++) {
-            if (!/^(\s+|,|\.|\?|!)$/.test(tokens[j])) { tokens[j] = ""; break; }
-          }
-          continue;
-        }
-        if (KNOWN_NOUNS.has(nextLower) || KNOWN_NOUNS.has(nextLower.replace(/s$/, ""))) {
-          // "for meeting" → "meeting-ge"
-          const noun = KNOWN_NOUNS.has(nextLower) ? nextLower : nextLower.replace(/s$/, "");
-          outTokens.push(nounU(noun) + "-ge");
-          for (let j = i + 1; j < tokens.length; j++) {
-            if (!/^(\s+|,|\.|\?|!)$/.test(tokens[j])) { tokens[j] = ""; break; }
-          }
-          continue;
+  // 2. Handle comma-separated clauses independently
+  if (/,/.test(text)) {
+    const clauses = text.split(/\s*,\s*/);
+    const translated = clauses.map(c => {
+      // Try phrase match on each clause
+      for (const [pat, rep] of ENG_PHRASES) {
+        if (pat.test(c)) {
+          if (typeof rep === "function") return c.replace(pat, rep);
+          return rep;
         }
       }
-    }
-
-    // Strip structural English words
-    if (STRIP_WORDS.has(lower)) {
-      continue;
-    }
-
-    // Loanwords — keep as-is (common English words used in Bengaluru Kanglish)
-    if (LOANWORDS.has(lower)) {
-      outTokens.push(lower);
-      continue;
-    }
-
-    // Pronouns
-    if (PRONOUNS[lower]) {
-      outTokens.push(PRONOUNS[lower]);
-      continue;
-    }
-
-    // Adverbs / time words
-    if (ADVERBS[lower]) {
-      outTokens.push(ADVERBS[lower]);
-      continue;
-    }
-
-    // Misc words
-    if (MISC_WORDS[lower]) {
-      outTokens.push(MISC_WORDS[lower]);
-      continue;
-    }
-
-    // Numbers — keep as-is (or translate number words)
-    if (/^\d+$/.test(tok)) {
-      outTokens.push(tok);
-      continue;
-    }
-    const NUMBER_WORDS = {
-      "one":"ondu","two":"eradu","three":"mooru","four":"naaku",
-      "five":"aidu","six":"aaru","seven":"yelu","eight":"entu",
-      "nine":"ombattu","ten":"hattu",
-    };
-    if (NUMBER_WORDS[lower]) {
-      outTokens.push(NUMBER_WORDS[lower]);
-      continue;
-    }
-
-    // Verb?
-    const verbBase = resolveVerb(lower);
-    if (verbBase && VERBS[verbBase]) {
-      const wordTokens = tokens.filter(t => !/^(\s+|,|\.|\?|!)$/.test(t));
-      const wordIdx = wordTokens.indexOf(tok);
-      const mood = detectVerbMood(wordTokens, wordIdx >= 0 ? wordIdx : 0);
-      const v = VERBS[verbBase];
-
-      if (mood === "gerund") {
-        outTokens.push(v.gerund);
-      } else if (mood === "past") {
-        outTokens.push(v.past);
-      } else {
-        outTokens.push(v.madi);
-      }
-      continue;
-    }
-
-    // Known noun → add -u
-    if (KNOWN_NOUNS.has(lower)) {
-      outTokens.push(nounU(lower));
-      continue;
-    }
-
-    // Unknown word: if it looks like a noun (not a common English word), add -u
-    // This catches things like "tubelights", "samosa", brand names, etc.
-    const cleaned = lower.replace(/s$/, ""); // strip plural
-    if (KNOWN_NOUNS.has(cleaned)) {
-      outTokens.push(nounU(cleaned));
-      continue;
-    }
-
-    // Fallback: treat unknown words as nouns and add -u
-    // (This is the Kanglish way — everything gets a -u!)
-    // Strip plural 's' first
-    const fallbackWord = (/^[a-zA-Z]{3,}s$/.test(tok)) ? cleaned : lower;
-    if (/^[a-zA-Z]{2,}$/.test(tok) && !isKanglishWord(lower)) {
-      outTokens.push(nounU(fallbackWord));
-    } else {
-      outTokens.push(tok);
-    }
+      const roles = parseEnglish(c);
+      return assembleKanglish(roles);
+    });
+    return cleanUp(translated.filter(Boolean).join(", "));
   }
 
-  return cleanUp(reorderSOV(outTokens.join("")));
+  // 3. Parse and assemble
+  const roles = parseEnglish(text);
+  return cleanUp(assembleKanglish(roles));
 }
 
-// ─── SOV Reorder: move time-context to front, command verbs to end ─────────
-function reorderSOV(text) {
-  // Split by comma into clauses and reorder each
-  const clauses = text.split(/\s*,\s*/);
-  const reordered = clauses.map(clause => {
-    const words = clause.trim().split(/\s+/);
-    if (words.length <= 2) return clause;
-
-    const timeWords = [];
-    const verbWords = [];
-    const rest = [];
-
-    const TIME_SET = new Set(Object.values(ADVERBS));
-    const VERB_OUTPUTS = new Set();
-    for (const v of Object.values(VERBS)) {
-      VERB_OUTPUTS.add(v.madi);
-      // multi-word madi forms like "thogondu banni"
-      v.madi.split(" ").forEach(w => VERB_OUTPUTS.add(w));
-    }
-
-    for (const w of words) {
-      const lower = w.toLowerCase();
-      if (TIME_SET.has(lower) && !verbWords.length) {
-        timeWords.push(w);
-      } else if (VERB_OUTPUTS.has(lower) || /-(madi|aagu)$/.test(lower)) {
-        verbWords.push(w);
-      } else {
-        rest.push(w);
-      }
-    }
-
-    // Only reorder if we have all parts
-    if (timeWords.length && verbWords.length && rest.length) {
-      return [...timeWords, ...rest, ...verbWords].join(" ");
-    }
-    if (verbWords.length && rest.length) {
-      return [...rest, ...verbWords].join(" ");
-    }
-    return clause;
-  });
-
-  return reordered.join(", ");
-}
-
-function getNextWord(tokens, fromIdx) {
-  for (let j = fromIdx + 1; j < tokens.length; j++) {
-    if (!/^(\s+|,|\.|\?|!)$/.test(tokens[j])) return tokens[j];
-  }
-  return null;
-}
-
-function isKanglishWord(w) {
-  // Check if this word is already a Kanglish output word
-  const allKanglish = new Set([
-    ...Object.values(ADVERBS),
-    ...Object.values(PRONOUNS),
-    ...Object.values(MISC_WORDS),
-    ...Object.values(QUESTION_WORDS),
-    ...Object.values(TAMIL_MAP),
-  ]);
-  return allKanglish.has(w);
-}
-
+// ─── CLEANUP ───────────────────────────────────────────────────────────────
 function cleanUp(text) {
   return text
     .replace(/\s{2,}/g, " ")
     .replace(/\s+([?.!,])/g, "$1")
-    .replace(/([?.!])\1+/g, "$1")  // collapse repeated punctuation
+    .replace(/([?.!])\1+/g, "$1")
     .replace(/,\s*,/g, ",")
     .replace(/^\s+|\s+$/g, "")
     .replace(/^./, c => c.toUpperCase());
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────
+// ─── MAIN ──────────────────────────────────────────────────────────────────
 function translate(input) {
   const text = input.trim();
   if (!text) return { result: "", lang: "unknown" };
@@ -809,16 +1007,16 @@ function translate(input) {
   return { result, lang };
 }
 
-// ─── UI Wiring ─────────────────────────────────────────────────────────────
+// ─── UI WIRING ─────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  const inputEl      = document.getElementById("inputText");
-  const translateBtn  = document.getElementById("translateBtn");
-  const clearBtn      = document.getElementById("clearBtn");
-  const outputBox     = document.getElementById("outputBox");
-  const outputText    = document.getElementById("outputText");
-  const detectedEl    = document.getElementById("detectedLang");
-  const copyBtn       = document.getElementById("copyBtn");
-  const toastEl       = document.getElementById("toast");
+  const inputEl     = document.getElementById("inputText");
+  const translateBtn = document.getElementById("translateBtn");
+  const clearBtn     = document.getElementById("clearBtn");
+  const outputBox    = document.getElementById("outputBox");
+  const outputText   = document.getElementById("outputText");
+  const detectedEl   = document.getElementById("detectedLang");
+  const copyBtn      = document.getElementById("copyBtn");
+  const toastEl      = document.getElementById("toast");
 
   inputEl.addEventListener("input", () => {
     clearBtn.style.display = inputEl.value.trim() === "" ? "none" : "block";
@@ -854,7 +1052,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function showToast(msg) {
     toastEl.textContent = msg;
     toastEl.classList.remove("show");
-    // Force reflow to restart animation
     void toastEl.offsetWidth;
     toastEl.classList.add("show");
     setTimeout(() => toastEl.classList.remove("show"), 1600);
